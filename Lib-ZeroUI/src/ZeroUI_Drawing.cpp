@@ -438,6 +438,48 @@ void zuiDrawImage(
 	zuiDrawAddCommand(draw_ctx, transform, verts, 4, indices, 6, ZUI_CMD_TEXTURE, image_handle);
 }
 
+void zuiDrawImageGrayscale(
+	ZuiDrawCtx* draw_ctx,
+	const SfzMat44& transform,
+	f32x2 dims,
+	u64 image_handle,
+	f32x4 tint_color)
+{
+	const f32x2 half_dims = dims * 0.5f;
+
+	// Bottom left
+	ZuiVertex verts[4];
+	verts[0].pos = f32x2_init(-half_dims.x, -half_dims.y);
+	verts[0].texcoord = draw_ctx->img_flip_y ? f32x2_init(0.0f, 1.0f) : f32x2_init(0.0f, 0.0f);
+	verts[0].color = tint_color.xyz();
+	verts[0].alpha = tint_color.w;
+
+	// Bottom right
+	verts[1].pos = f32x2_init(half_dims.x, -half_dims.y);
+	verts[1].texcoord = draw_ctx->img_flip_y ? f32x2_init(1.0f, 1.0f) : f32x2_init(1.0f, 0.0f);
+	verts[1].color = tint_color.xyz();
+	verts[1].alpha = tint_color.w;
+
+	// Top left
+	verts[2].pos = f32x2_init(-half_dims.x, half_dims.y);
+	verts[2].texcoord = draw_ctx->img_flip_y ? f32x2_init(0.0f, 0.0f) : f32x2_init(0.0f, 1.0f);
+	verts[2].color = tint_color.xyz();
+	verts[2].alpha = tint_color.w;
+
+	// Top right
+	verts[3].pos = f32x2_init(half_dims.x, half_dims.y);
+	verts[3].texcoord = draw_ctx->img_flip_y ? f32x2_init(1.0f, 0.0f) : f32x2_init(1.0f, 1.0f);
+	verts[3].color = tint_color.xyz();
+	verts[3].alpha = tint_color.w;
+
+	const u32 indices[6] = {
+		0, 1, 2,
+		1, 3, 2
+	};
+
+	zuiDrawAddCommand(draw_ctx, transform, verts, 4, indices, 6, ZUI_CMD_TEXTURE_GRAYSCALE, image_handle);
+}
+
 void zuiDrawRect(
 	ZuiDrawCtx* draw_ctx,
 	const SfzMat44& transform,

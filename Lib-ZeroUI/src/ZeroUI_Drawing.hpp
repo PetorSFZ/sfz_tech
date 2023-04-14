@@ -76,6 +76,13 @@ void zuiDrawImage(
 	f32x2 dims,
 	u64 image_handle);
 
+void zuiDrawImageGrayscale(
+	ZuiDrawCtx* draw_ctx,
+	const SfzMat44& transform,
+	f32x2 dims,
+	u64 image_handle,
+	f32x4 tint_color);
+
 void zuiDrawRect(
 	ZuiDrawCtx* draw_ctx,
 	const SfzMat44& transform,

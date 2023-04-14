@@ -49,6 +49,7 @@ template<typename T>
 class SfzArray final {
 public:
 	SFZ_DECLARE_DROP_TYPE(SfzArray);
+	using ValT = T;
 
 	explicit SfzArray(u32 capacity, SfzAllocator* allocator, SfzDbgInfo alloc_dbg) noexcept
 	{
@@ -308,6 +309,7 @@ template<typename T, u32 Capacity>
 class SfzArrayLocal final {
 public:
 	static_assert(alignof(T) <= 16, "");
+	using ValT = T;
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------

@@ -216,6 +216,10 @@ sfz_extern_c GpuLib* gpuLibInit(const GpuLibInitCfg* cfg_in)
 		CHECK_D3D12_INIT(device->CheckFeatureSupport(
 			D3D12_FEATURE_D3D12_OPTIONS5, &options5, sizeof(options5)));
 
+		D3D12_FEATURE_DATA_D3D12_OPTIONS12 options12 = {};
+		CHECK_D3D12_INIT(device->CheckFeatureSupport(
+			D3D12_FEATURE_D3D12_OPTIONS12, &options12, sizeof(options12)));
+
 		D3D12_FEATURE_DATA_SHADER_MODEL shader_model = {};
 		shader_model.HighestShaderModel = D3D_SHADER_MODEL_6_7; // Set to highest model your app understands
 		CHECK_D3D12_INIT(device->CheckFeatureSupport(
@@ -251,14 +255,17 @@ WaveLaneCountMin: %u
 WaveLaneCountMax: %u
 GpuTotalLaneCount: %u
 
-RTX support: %s)",
+RTX support: %s
+
+Enhanced barriers: %s)",
 			shaderModelToStr(shader_model.HighestShaderModel),
 			supports_shader_dynamic_resources ? "True" : "False",
 			options1.WaveOps ? "True" : "False",
 			options1.WaveLaneCountMin,
 			options1.WaveLaneCountMax,
 			options1.TotalLaneCount,
-			options5.RaytracingTier != D3D12_RAYTRACING_TIER_NOT_SUPPORTED ? "True" : "False");
+			options5.RaytracingTier != D3D12_RAYTRACING_TIER_NOT_SUPPORTED ? "True" : "False",
+			options12.EnhancedBarriersSupported ? "True" : "False");
 	}
 
 	// Create command queue
@@ -648,7 +655,7 @@ RTX support: %s)",
 
 	// Do a quick present after initialization has finished, used to set up framebuffers
 	gpuSubmitQueuedWork(gpu);
-	gpuSwapchainPresent(gpu, false);
+	gpuSwapchainPresent(gpu, false, 1);
 	sfz_assert(gpu->curr_submit_idx == 1);
 	sfz_assert(gpu->upload_heap_safe_offset == gpu->cfg.upload_heap_size_bytes);
 	sfz_assert(gpu->download_heap_safe_offset == gpu->cfg.download_heap_size_bytes);
@@ -1854,6 +1861,8 @@ sfz_extern_c void gpuQueueMemcpyUploadTexMip(
 		&tex_desc, mip_idx, 1, 0, &footprint, &num_rows, &row_size_bytes, &total_bytes);
 	sfz_assert_hard(num_rows == u32(mip_dims.y));
 	sfz_assert_hard((num_rows * row_size_bytes) <= total_bytes);
+	total_bytes = u64_max(total_bytes, (num_rows * footprint.Footprint.RowPitch));
+	sfz_assert_hard((num_rows * footprint.Footprint.RowPitch) == total_bytes);
 	const u32 num_bytes = sfzRoundUpAlignedU32(u32(total_bytes), GPU_HEAP_ALIGN);
 
 	// Try to allocate a range
@@ -1866,9 +1875,11 @@ sfz_extern_c void gpuQueueMemcpyUploadTexMip(
 
 	// Copy data to upload heap and commit change
 	u8* dst_img = gpu->upload_heap_mapped_ptr + range_alloc.begin_mapped;
+	const u32 dst_pitch = footprint.Footprint.RowPitch;
 	const u32 src_pitch = mip_dims.x * formatToPixelSize(format);
+	sfz_assert(src_pitch <= row_size_bytes);
 	for (i32 y = 0; y < mip_dims.y; y++) {
-		u8* dst_row = dst_img + u32(row_size_bytes) * u32(y);
+		u8* dst_row = dst_img + dst_pitch * u32(y);
 		const u8* src_row = static_cast<const u8*>(src) + src_pitch * u32(y);
 		memcpy(dst_row, src_row, src_pitch);
 	}
@@ -2344,16 +2355,17 @@ sfz_extern_c void gpuSubmitQueuedWork(GpuLib* gpu)
 	}
 }
 
-sfz_extern_c void gpuSwapchainPresent(GpuLib* gpu, bool vsync)
+sfz_extern_c void gpuSwapchainPresent(GpuLib* gpu, bool vsync, i32 sync_interval)
 {
 	if (gpu->swapchain == nullptr) return;
+	sync_interval = i32_clamp(sync_interval, 1, 4);
 
 	// Present swapchain's render target
 	{
 		// Present
 		const u32 pre_present_swapchain_fb_idx = gpu->swapchain->GetCurrentBackBufferIndex();
 		sfz_assert(pre_present_swapchain_fb_idx < GPU_SWAPCHAIN_NUM_BACKBUFFERS);
-		const u32 vsync_val = vsync ? 1 : 0; // Can specify 2-4 for vsync:ing on not every frame
+		const u32 vsync_val = vsync ? u32(sync_interval) : 0; // Can specify 2-4 for vsync:ing on not every frame
 		const u32 flags = (!vsync && gpu->allow_tearing) ? DXGI_PRESENT_ALLOW_TEARING : 0;
 		if (!CHECK_D3D12(gpu->swapchain->Present(vsync_val, flags))) {
 			GPU_LOG_ERROR("[gpu_lib]: Present failure.");

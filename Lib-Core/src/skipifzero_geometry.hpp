@@ -49,7 +49,7 @@ static_assert(sizeof(AABB) == sizeof(f32) * 6, "AABB is padded");
 inline f32 rayVsAABB(const SfzRay& ray, const AABB& aabb, f32* t_min_out = nullptr, f32* t_max_out = nullptr)
 {
 	const f32x3 origin = ray.origin;
-	const f32x3 inv_dir = sfzInvertRayDir(ray.dir);
+	const f32x3 inv_dir = sfzRayInvertDir(ray.dir);
 	f32 t_min, t_max;
 	sfzRayVsAABB(origin, inv_dir, aabb.min, aabb.max, &t_min, &t_max);
 	if (t_min_out != nullptr) *t_min_out = t_min;

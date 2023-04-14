@@ -247,7 +247,8 @@ struct ZuiVertex {
 
 static const uint ZUI_CMD_COLOR = 0;
 static const uint ZUI_CMD_TEXTURE = 1;
-static const uint ZUI_CMD_FONT_ATLAS = 2;
+static const uint ZUI_CMD_TEXTURE_GRAYSCALE = 2;
+static const uint ZUI_CMD_FONT_ATLAS = 3;
 
 struct ZeroUILaunchParams {
 	uint cmd_type;
@@ -300,6 +301,12 @@ float4 PSMain(PSInput input) : SV_TARGET
 		SamplerState color_sampler = getSampler(GPU_LINEAR, GPU_CLAMP, GPU_CLAMP);
 		const float4 rgba = color_tex.Sample(color_sampler, input.texcoord);
 		return input.color * rgba;
+	}
+	else if (params.cmd_type == ZUI_CMD_TEXTURE_GRAYSCALE) {
+		Texture2D grayscale_tex = getTex(params.tex_idx);
+		SamplerState grayscale_sampler = getSampler(GPU_NEAREST, GPU_CLAMP, GPU_CLAMP);
+		const float alpha = grayscale_tex.Sample(grayscale_sampler, input.texcoord).r;
+		return input.color * float4(1.0, 1.0, 1.0, alpha);
 	}
 	else if (params.cmd_type == ZUI_CMD_FONT_ATLAS) {
 		Texture2D font_tex = getTex(params.tex_idx);

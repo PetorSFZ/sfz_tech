@@ -378,7 +378,9 @@ sfz_extern_c void gpuSubmitQueuedWork(GpuLib* gpu);
 
 // Presents the latest swapchain image to the screen. Will block GPU and resize swapchain if
 // resolution has changed.
-sfz_extern_c void gpuSwapchainPresent(GpuLib* gpu, bool vsync);
+// sync_interval can be used to sync on a lower refresh rate. 1 means sync every frame, 2 means
+// sync every other, etc.
+sfz_extern_c void gpuSwapchainPresent(GpuLib* gpu, bool vsync, i32 sync_interval);
 
 // Flushes (blocks) until all currently submitted GPU work has finished executing.
 sfz_extern_c void gpuFlushSubmittedWork(GpuLib* gpu);

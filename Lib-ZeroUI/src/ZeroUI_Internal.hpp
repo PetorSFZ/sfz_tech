@@ -209,6 +209,9 @@ struct ZuiCtx final {
 	// Input lock stack
 	SfzArray<ZuiID> input_locks;
 
+	// Input hack to try to always have the top most element selected by default
+	bool new_list_created = false;
+
 	// AttributeSet used when rendering
 	SfzHashMap<u64, ZuiAttrib> attribs;
 	SfzHashMap<u64, ZuiAttrib> default_attribs;

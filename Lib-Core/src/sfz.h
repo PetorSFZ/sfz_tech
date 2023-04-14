@@ -343,21 +343,21 @@ sfz_constexpr_func i32x2 i32x2_max(i32x2 l, i32x2 r) { return i32x2_init(i32_max
 sfz_constexpr_func i32x3 i32x3_max(i32x3 l, i32x3 r) { return i32x3_init(i32_max(l.x, r.x), i32_max(l.y, r.y), i32_max(l.z, r.z)); }
 sfz_constexpr_func i32x4 i32x4_max(i32x4 l, i32x4 r) { return i32x4_init(i32_max(l.x, r.x), i32_max(l.y, r.y), i32_max(l.z, r.z), i32_max(l.w, r.w)); }
 
-sfz_constexpr_func i32 i32_clamp(i32 v, i32 minVal, i32 maxVal) { return i32_max(minVal, i32_min(v, maxVal)); }
-sfz_constexpr_func u32 u32_clamp(u32 v, u32 minVal, u32 maxVal) { return u32_max(minVal, u32_min(v, maxVal)); }
-sfz_constexpr_func f32 f32_clamp(f32 v, f32 minVal, f32 maxVal) { return f32_max(minVal, f32_min(v, maxVal)); }
-sfz_constexpr_func f32x2 f32x2_clampv(f32x2 v, f32x2 minVal, f32x2 maxVal) { return f32x2_max(minVal, f32x2_min(v, maxVal)); }
-sfz_constexpr_func f32x2 f32x2_clamps(f32x2 v, f32 minVal, f32 maxVal) { return f32x2_clampv(v, f32x2_splat(minVal), f32x2_splat(maxVal)); }
-sfz_constexpr_func f32x3 f32x3_clampv(f32x3 v, f32x3 minVal, f32x3 maxVal) { return f32x3_max(minVal, f32x3_min(v, maxVal)); }
-sfz_constexpr_func f32x3 f32x3_clamps(f32x3 v, f32 minVal, f32 maxVal) { return f32x3_clampv(v, f32x3_splat(minVal), f32x3_splat(maxVal)); }
-sfz_constexpr_func f32x4 f32x4_clampv(f32x4 v, f32x4 minVal, f32x4 maxVal) { return f32x4_max(minVal, f32x4_min(v, maxVal)); }
-sfz_constexpr_func f32x4 f32x4_clamps(f32x4 v, f32 minVal, f32 maxVal) { return f32x4_clampv(v, f32x4_splat(minVal), f32x4_splat(maxVal)); }
-sfz_constexpr_func i32x2 i32x2_clampv(i32x2 v, i32x2 minVal, i32x2 maxVal) { return i32x2_max(minVal, i32x2_min(v, maxVal)); }
-sfz_constexpr_func i32x2 i32x2_clamps(i32x2 v, i32 minVal, i32 maxVal) { return i32x2_clampv(v, i32x2_splat(minVal), i32x2_splat(maxVal)); }
-sfz_constexpr_func i32x3 i32x3_clampv(i32x3 v, i32x3 minVal, i32x3 maxVal) { return i32x3_max(minVal, i32x3_min(v, maxVal)); }
-sfz_constexpr_func i32x3 i32x3_clamps(i32x3 v, i32 minVal, i32 maxVal) { return i32x3_clampv(v, i32x3_splat(minVal), i32x3_splat(maxVal)); }
-sfz_constexpr_func i32x4 i32x4_clampv(i32x4 v, i32x4 minVal, i32x4 maxVal) { return i32x4_max(minVal, i32x4_min(v, maxVal)); }
-sfz_constexpr_func i32x4 i32x4_clamps(i32x4 v, i32 minVal, i32 maxVal) { return i32x4_clampv(v, i32x4_splat(minVal), i32x4_splat(maxVal)); }
+sfz_constexpr_func i32 i32_clamp(i32 v, i32 min_val, i32 max_val) { return i32_max(min_val, i32_min(v, max_val)); }
+sfz_constexpr_func u32 u32_clamp(u32 v, u32 min_val, u32 max_val) { return u32_max(min_val, u32_min(v, max_val)); }
+sfz_constexpr_func f32 f32_clamp(f32 v, f32 min_val, f32 max_val) { return f32_max(min_val, f32_min(v, max_val)); }
+sfz_constexpr_func f32x2 f32x2_clampv(f32x2 v, f32x2 min_val, f32x2 max_val) { return f32x2_max(min_val, f32x2_min(v, max_val)); }
+sfz_constexpr_func f32x2 f32x2_clamps(f32x2 v, f32 min_val, f32 max_val) { return f32x2_clampv(v, f32x2_splat(min_val), f32x2_splat(max_val)); }
+sfz_constexpr_func f32x3 f32x3_clampv(f32x3 v, f32x3 min_val, f32x3 max_val) { return f32x3_max(min_val, f32x3_min(v, max_val)); }
+sfz_constexpr_func f32x3 f32x3_clamps(f32x3 v, f32 min_val, f32 max_val) { return f32x3_clampv(v, f32x3_splat(min_val), f32x3_splat(max_val)); }
+sfz_constexpr_func f32x4 f32x4_clampv(f32x4 v, f32x4 min_val, f32x4 max_val) { return f32x4_max(min_val, f32x4_min(v, max_val)); }
+sfz_constexpr_func f32x4 f32x4_clamps(f32x4 v, f32 min_val, f32 max_val) { return f32x4_clampv(v, f32x4_splat(min_val), f32x4_splat(max_val)); }
+sfz_constexpr_func i32x2 i32x2_clampv(i32x2 v, i32x2 min_val, i32x2 max_val) { return i32x2_max(min_val, i32x2_min(v, max_val)); }
+sfz_constexpr_func i32x2 i32x2_clamps(i32x2 v, i32 min_val, i32 max_val) { return i32x2_clampv(v, i32x2_splat(min_val), i32x2_splat(max_val)); }
+sfz_constexpr_func i32x3 i32x3_clampv(i32x3 v, i32x3 min_val, i32x3 max_val) { return i32x3_max(min_val, i32x3_min(v, max_val)); }
+sfz_constexpr_func i32x3 i32x3_clamps(i32x3 v, i32 min_val, i32 max_val) { return i32x3_clampv(v, i32x3_splat(min_val), i32x3_splat(max_val)); }
+sfz_constexpr_func i32x4 i32x4_clampv(i32x4 v, i32x4 min_val, i32x4 max_val) { return i32x4_max(min_val, i32x4_min(v, max_val)); }
+sfz_constexpr_func i32x4 i32x4_clamps(i32x4 v, i32 min_val, i32 max_val) { return i32x4_clampv(v, i32x4_splat(min_val), i32x4_splat(max_val)); }
 
 sfz_constexpr_func f32x2 f32x2_from_i32(i32x2 o) { return f32x2_init(f32(o.x), f32(o.y)); }
 sfz_constexpr_func f32x2 f32x2_from_u8(u8x2 o) { return f32x2_init(f32(o.x), f32(o.y)); }

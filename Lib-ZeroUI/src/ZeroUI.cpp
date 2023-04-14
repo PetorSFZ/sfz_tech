@@ -103,6 +103,9 @@ sfz_extern_c void zuiInputBegin(ZuiCtx* zui, const ZuiInput* input)
 	// Set input
 	zui->input = *input;
 
+	// No new list has been created yet
+	zui->new_list_created = false;
+
 	// Clear all drawfunc stacks and set default draw func
 	for (auto pair : zui->widget_types) {
 		pair.value.draw_func_stack.clear();
@@ -365,12 +368,37 @@ sfz_extern_c bool zuiInputEnd(ZuiCtx* zui)
 		break;
 	}
 
+	// If a list was created, try to ensure that the top-most element is selected
+	if (zui->new_list_created) {
+		
+		// This is a bit of hacky solution, essentially we add a fake "DOWN" input which should
+		// select the top-most element of the new list (as no element in it should be selected).
+		// It seems to work surprisingly well, but wouldn't surprise me if there's some evil edge
+		// case where it's wonky. Be prepared to fix this in the future.
+		
+		zui->input.action = ZUI_INPUT_DOWN;
+		bool move_active = false;
+		zuiInputKeyMoveLogic(zui, root, &move_active);
+
+		// If input wasn't consumed, try again with move already active.
+		if (zui->input.action != ZUI_INPUT_NONE) {
+			move_active = true;
+			zuiInputKeyMoveLogic(zui, root, &move_active);
+		}
+	}
+
 	return input_used;
 }
 
 sfz_extern_c f32x2 zuiGetSurfDims(const ZuiCtx* zui)
 {
 	return zui->input.dims;
+}
+
+sfz_extern_c f32x2 zuiGetFbDimsInSurfSpace(const ZuiCtx* zui)
+{
+	const f32x2 scale = f32x2_from_i32(zui->input.fb_dims) / f32x2_from_i32(zui->input.dims_on_fb);
+	return zui->input.dims * scale;
 }
 
 // Rendering
@@ -889,6 +917,9 @@ void zuiList(ZuiCtx* zui, ZuiID id, f32 widget_height, f32 vert_spacing)
 	ZuiWidget* w = zuiCtxCreateWidgetParent<ZuiListData>(zui, id, ZUI_LIST_ID, &initial);
 	ZuiListData* data = w->data<ZuiListData>();
 
+	// If new list created, mark so in the ZeroUI context for additional input logic
+	if (initial) zui->new_list_created = true;
+
 	// Set list data from parameters
 	sfz_assert(widget_height > 0.0f);
 	data->widget_height = widget_height;
@@ -1025,6 +1056,8 @@ void zuiRectBorder(ZuiCtx* zui, ZuiID id, f32 border_width, f32x4 srgb_color)
 
 struct ZuiImageData final {
 	u64 image_handle = 0;
+	bool is_grayscale = false;
+	f32x4 tint_color = f32x4_splat(0);
 };
 
 static void imageDrawDefault(
@@ -1035,7 +1068,12 @@ static void imageDrawDefault(
 	const ZuiImageData& data = *widget->data<ZuiImageData>();
 	const SfzMat44 transform =
 		*surf_to_clip * sfzMat44Translation3(f32x3_init2(widget->base.box.center(), 0.0f));
-	zuiDrawImage(&zui->draw_ctx, transform, widget->base.box.dims(), data.image_handle);
+	if (data.is_grayscale) {
+		zuiDrawImageGrayscale(&zui->draw_ctx, transform, widget->base.box.dims(), data.image_handle, data.tint_color);
+	}
+	else {
+		zuiDrawImage(&zui->draw_ctx, transform, widget->base.box.dims(), data.image_handle);
+	}
 }
 
 void zuiImage(ZuiCtx* zui, ZuiID id, u64 image_handle)
@@ -1045,6 +1083,21 @@ void zuiImage(ZuiCtx* zui, ZuiID id, u64 image_handle)
 
 	// Store data
 	data->image_handle = image_handle;
+	data->is_grayscale = false;
+
+	// Image can't be activated
+	w->base.activated = false;
+}
+
+void zuiImageGrayscale(ZuiCtx* zui, ZuiID id, u64 image_handle, f32x4 tint_color)
+{
+	ZuiWidget* w = zuiCtxCreateWidget<ZuiImageData>(zui, id, ZUI_IMAGE_ID);
+	ZuiImageData* data = w->data<ZuiImageData>();
+
+	// Store data
+	data->image_handle = image_handle;
+	data->is_grayscale = true;
+	data->tint_color = tint_color;
 
 	// Image can't be activated
 	w->base.activated = false;

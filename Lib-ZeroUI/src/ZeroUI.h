@@ -203,6 +203,7 @@ sfz_struct(ZuiInput) {
 sfz_extern_c void zuiInputBegin(ZuiCtx* zui, const ZuiInput* desc);
 sfz_extern_c bool zuiInputEnd(ZuiCtx* zui);
 sfz_extern_c f32x2 zuiGetSurfDims(const ZuiCtx* zui); // Helper to get current ZuiInput::dims
+sfz_extern_c f32x2 zuiGetFbDimsInSurfSpace(const ZuiCtx* zui);
 
 // Rendering
 // ------------------------------------------------------------------------------------------------
@@ -218,7 +219,8 @@ sfz_static_assert(sizeof(ZuiVertex) == 32);
 typedef enum ZuiCmdType {
 	ZUI_CMD_COLOR = 0,
 	ZUI_CMD_TEXTURE = 1,
-	ZUI_CMD_FONT_ATLAS = 2,
+	ZUI_CMD_TEXTURE_GRAYSCALE = 2,
+	ZUI_CMD_FONT_ATLAS = 3,
 	ZUI_CMD_FORCE_I32 = I32_MAX
 } ZuiCmdType;
 
@@ -407,6 +409,7 @@ void zuiRectBorder(ZuiCtx* zui, ZuiID id, f32 border_width, f32x4 srgb_color);
 sfz_constant char ZUI_IMAGE_WIDGET[] = "image";
 
 void zuiImage(ZuiCtx* zui, ZuiID id, u64 image_handle);
+void zuiImageGrayscale(ZuiCtx* zui, ZuiID id, u64 image_handle, f32x4 tint_color);
 
 // Button widget
 // ------------------------------------------------------------------------------------------------
