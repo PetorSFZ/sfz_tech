@@ -87,6 +87,16 @@ template<typename T1, typename T2> struct SfzIsSameType { static constexpr bool 
 template<typename T> struct SfzIsSameType<T, T> { static constexpr bool value = true; };
 template<typename T1, typename T2> constexpr bool sfzIsSameType() { return SfzIsSameType<T1, T2>::value; }
 
+// Helper to check for info about C-arrays
+template<typename T> struct SfzCArrayInfo { static constexpr bool is_array = false; };
+template<typename T, u32 SIZE>
+struct SfzCArrayInfo<T[SIZE]> {
+	static constexpr bool is_array = true;
+	using ElemT = T;
+	static constexpr u32 size = SIZE;
+};
+template<typename T> constexpr bool sfzIsCArray() { return SfzCArrayInfo<T>::is_array; }
+
 #endif // __cplusplus
 
 // String literal
@@ -260,74 +270,6 @@ constexpr bool sfzIsVisitable() { return false; }
 
 // Can't implement this in C, so do nothing.
 #define SFZ_VISITABLE(T, ...)
-
-#endif // __cplusplus
-
-// Type name
-// ------------------------------------------------------------------------------------------------
-
-#ifdef __cplusplus
-
-// Experimental function to get the name of a type.
-// See: https://blog.molecular-matters.com/2015/12/11/getting-the-type-of-a-template-argument-as-string-without-rtti/
-template<typename T>
-constexpr SfzStrLit64 sfzTypeName()
-{
-#ifdef _WIN32
-	constexpr char PREFIX[] ="struct SfzStrLit64 __cdecl sfzTypeName<";
-	constexpr char POSTFIX[] = ">(void)";
-	constexpr i32 PREFIX_LEN = sizeof(PREFIX) - 1;
-	constexpr i32 POSTFIX_LEN = sizeof(POSTFIX) - 1;
-	constexpr i32 SIG_LEN = sizeof(__FUNCSIG__) - 1;
-	i32 NAME_LEN = SIG_LEN - PREFIX_LEN - POSTFIX_LEN;
-	const char* NAME_STR = __FUNCSIG__ + PREFIX_LEN;
-	if (7 < NAME_LEN &&
-		NAME_STR[0] == 's' &&
-		NAME_STR[1] == 't' &&
-		NAME_STR[2] == 'r' &&
-		NAME_STR[3] == 'u' &&
-		NAME_STR[4] == 'c' &&
-		NAME_STR[5] == 't' &&
-		NAME_STR[6] == ' ') {
-		NAME_STR = NAME_STR + 7;
-		NAME_LEN -= 7;
-	}
-	else if (6 < NAME_LEN &&
-		NAME_STR[0] == 'c' &&
-		NAME_STR[1] == 'l' &&
-		NAME_STR[2] == 'a' &&
-		NAME_STR[3] == 's' &&
-		NAME_STR[4] == 's' &&
-		NAME_STR[5] == ' ') {
-		NAME_STR = NAME_STR + 6;
-		NAME_LEN -= 6;
-	}
-#else
-#error "Need to implement for this compiler"
-#endif
-	SfzStrLit64 name = {};
-	name.len = NAME_LEN;
-	for (i32 i = 0; i < NAME_LEN; i++) {
-		name.str[i] = NAME_STR[i];
-	}
-	return name;
-}
-
-template<> constexpr SfzStrLit64 sfzTypeName<bool>() { return SfzStrLit64("bool"); }
-template<> constexpr SfzStrLit64 sfzTypeName<char>() { return SfzStrLit64("char"); }
-
-template<> constexpr SfzStrLit64 sfzTypeName<i8>() { return SfzStrLit64("i8"); }
-template<> constexpr SfzStrLit64 sfzTypeName<i16>() { return SfzStrLit64("i16"); }
-template<> constexpr SfzStrLit64 sfzTypeName<i32>() { return SfzStrLit64("i32"); }
-template<> constexpr SfzStrLit64 sfzTypeName<i64>() { return SfzStrLit64("i64"); }
-
-template<> constexpr SfzStrLit64 sfzTypeName<u8>() { return SfzStrLit64("u8"); }
-template<> constexpr SfzStrLit64 sfzTypeName<u16>() { return SfzStrLit64("u16"); }
-template<> constexpr SfzStrLit64 sfzTypeName<u32>() { return SfzStrLit64("u32"); }
-template<> constexpr SfzStrLit64 sfzTypeName<u64>() { return SfzStrLit64("u64"); }
-
-template<> constexpr SfzStrLit64 sfzTypeName<f32>() { return SfzStrLit64("f32"); }
-template<> constexpr SfzStrLit64 sfzTypeName<f64>() { return SfzStrLit64("f64"); }
 
 #endif // __cplusplus
 
